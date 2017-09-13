@@ -1,0 +1,18 @@
+mvn archetype:generate -DgroupId=com.skg.social -DartifactId=socialIntegration -DarchetypeArtifactId=maven-archetype-quickstart -DinteractiveMode=false
+
+git eclipse:eclipse
+
+Steps
+1. Create a eclipse project using command line
+2. go to directory of your porject for eg helloSpring
+3. git init
+4. git add * (adds all files recursively in directory to git)
+5. git commit -m “first message”
+6. Create a repo on git through their UI or command line
+7. git remote add origin https://<url>/<username>/<project-name>.git
+8. git push -u origin –all # pushes up the repo and its refs for the first time
+
+This displays the remote url which is configured
+git config remote.origin.url
+
+git push origin local-name:remote-name
