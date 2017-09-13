@@ -1,0 +1,116 @@
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
+import java.nio.charset.Charset;
+import java.nio.charset.CharsetEncoder;
+import java.util.Date;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+public class BlockingServerSocketChannel {
+
+	// atomic variable
+	AtomicBoolean isRunning = new AtomicBoolean(true);
+
+	// Charset and encoder for US-ASCII
+	private Charset charset = Charset.forName("US-ASCII");
+
+	private CharsetEncoder encoder = charset.newEncoder();
+
+	private ServerSocketChannel ssc;
+
+	/**
+	 * Open and bind the server-socket channel
+	 */
+	public void setup(int port) throws IOException {
+
+		ssc = ServerSocketChannel.open();
+
+		InetSocketAddress isa = new InetSocketAddress(InetAddress.getLocalHost(), port);
+		ssc.socket().bind(isa);
+
+		this.serve();
+
+	}
+
+	private void serve() throws IOException {
+
+		SocketChannel sc = ssc.accept();
+		try {
+
+			readIncomingData(sc);
+
+			while (this.isRunning.get()) {
+
+				String now = new Date().toString();
+				sc.write(encoder.encode(CharBuffer.wrap(now + "\n")));
+
+			}
+			if (!this.isRunning.get()) {
+
+				sc.close();
+
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+
+		}
+	}
+
+	public static void main(String[] args) throws IOException {
+
+		if (args.length < 1) {
+			System.err.println("BlockingServerSocketChannel needs a port No [port]");
+			return;
+		}
+
+		int listenPort = Integer.parseInt(args[0]);
+
+		try {
+			BlockingServerSocketChannel blockingServerSocket = new BlockingServerSocketChannel();
+
+			blockingServerSocket.setup(listenPort);
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+	}
+
+	/**
+	 * This will read the incoming channel data
+	 *
+	 * @param channel
+	 */
+	private void readIncomingData(SocketChannel channel) {
+
+		try {
+			ByteBuffer buffer = ByteBuffer.allocate(2048);
+			buffer.clear();
+
+			channel.read(buffer);
+
+			// Create a StringBuffer so that we can convert the bytes to a String
+			StringBuffer response = new StringBuffer();
+
+			buffer.flip();
+
+			// Create a CharSet that knows how to encode and decode standard text (UTF-8)
+			Charset charset = Charset.forName("UTF-8");
+
+			// Decode the buffer to a String using the CharSet and append it to our buffer
+			response.append(charset.decode(buffer));
+
+			// Output the response
+			System.out.println("Data read from client " + response);
+
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+	}
+
+}
